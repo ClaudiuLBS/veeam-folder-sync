@@ -1,9 +1,12 @@
 import os
 import sys
+import time
 import shutil
+import schedule
+from pathlib import Path
 from datetime import datetime
 from file_system_objects import FileSystemObject, Blob, Tree
-          
+
 class FoldersSynchronization:
   def __init__(self, source_folder_path: str,  replica_folder_path: str, log_file_path: str) -> None:
     self.source_folder_path = source_folder_path
@@ -183,8 +186,64 @@ class FoldersSynchronization:
 
 
 if __name__ == '__main__':
-  source_folder_path = 'source_folder'
-  replica_folder_path = 'replica_folder'
+  args = sys.argv
+  if len(args) != 6:
+    print("Correct format is 'python3 folders_sync.py <source_folder_path> <replica_folder_path> <log_file_path> <frequency> <time_unit>")
+    sys.exit(1)
+
+  source_folder_path = args[1]
+  replica_folder_path = args[2]
+  log_file_path = args[3]
+  frequency = args[4]
+  time_unit = args[5]
   
-  sync = FoldersSynchronization(source_folder_path, replica_folder_path, 'log_file')
-  sync.sync()
+  if not os.path.isdir(source_folder_path):
+    print("Invalid source folder path")
+    sys.exit(1)
+  
+  if not os.path.isdir(replica_folder_path):
+    print("Invalid replica folder path")
+    sys.exit(1)
+  
+  if not os.path.isdir(Path(log_file_path).parent):
+    print("Invalid path for the log file")
+    sys.exit(1)
+  
+  if Path(source_folder_path) in Path(log_file_path).parents:
+    print("Log file can't be a child of the source folder")
+    sys.exit(1)
+
+  if Path(replica_folder_path) in Path(log_file_path).parents:
+    print("Log file can't be a child of the replica folder")
+    sys.exit(1)
+    
+
+  try:
+    frequency = int(frequency)
+    if frequency < 1:
+      print("Please input a frequency number greater than 1")
+      sys.exit(1)
+  except:
+    print("Please input a valid frequency number")
+    sys.exit(1)
+
+  # available_time_units = ['s', 'seconds', 'm', 'minutes', 'h', 'hours', 'd', 'days']
+  available_time_units: dict[str, schedule.Job] = {
+    'seconds': schedule.every(frequency).seconds,
+    'minutes': schedule.every(frequency).minutes,
+    'hours': schedule.every(frequency).hours,
+    'days': schedule.every(frequency).days
+  }
+  
+  if time_unit.lower() not in available_time_units.keys():
+    print("Please input a valid time unit:")
+    print("seconds / minutes / hours / days")
+    sys.exit(1)
+
+  
+  folder_sync = FoldersSynchronization(source_folder_path, replica_folder_path, log_file_path)
+  available_time_units[time_unit].do(folder_sync.sync)
+
+  while True:
+    schedule.run_pending()
+    time.sleep(1)
