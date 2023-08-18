@@ -185,49 +185,36 @@ class FoldersSynchronization:
     self.log_file.write(message)
 
 
-if __name__ == '__main__':
-  args = sys.argv
-  if len(args) != 6:
-    print("Correct format is 'python3 folders_sync.py <source_folder_path> <replica_folder_path> <log_file_path> <frequency> <time_unit>")
-    sys.exit(1)
-
-  source_folder_path = args[1]
-  replica_folder_path = args[2]
-  log_file_path = args[3]
-  frequency = args[4]
-  time_unit = args[5]
-  
+def run(source_folder_path: str, replica_folder_path: str, log_file_path: str, frequency: str, time_unit: str):
   if not os.path.isdir(source_folder_path):
     print("Invalid source folder path")
-    sys.exit(1)
+    return
   
   if not os.path.isdir(replica_folder_path):
     print("Invalid replica folder path")
-    sys.exit(1)
+    return
   
   if not os.path.isdir(Path(log_file_path).parent):
     print("Invalid path for the log file")
-    sys.exit(1)
+    return
   
   if Path(source_folder_path) in Path(log_file_path).parents:
     print("Log file can't be a child of the source folder")
-    sys.exit(1)
+    return
 
   if Path(replica_folder_path) in Path(log_file_path).parents:
     print("Log file can't be a child of the replica folder")
-    sys.exit(1)
+    return
     
-
   try:
     frequency = int(frequency)
     if frequency < 1:
       print("Please input a frequency number greater than 1")
-      sys.exit(1)
+      return
   except:
     print("Please input a valid frequency number")
-    sys.exit(1)
+    return
 
-  # available_time_units = ['s', 'seconds', 'm', 'minutes', 'h', 'hours', 'd', 'days']
   available_time_units: dict[str, schedule.Job] = {
     'seconds': schedule.every(frequency).seconds,
     'minutes': schedule.every(frequency).minutes,
@@ -238,7 +225,7 @@ if __name__ == '__main__':
   if time_unit.lower() not in available_time_units.keys():
     print("Please input a valid time unit:")
     print("seconds / minutes / hours / days")
-    sys.exit(1)
+    return
 
   
   folder_sync = FoldersSynchronization(source_folder_path, replica_folder_path, log_file_path)
@@ -247,3 +234,14 @@ if __name__ == '__main__':
   while True:
     schedule.run_pending()
     time.sleep(1)
+
+
+if __name__ == '__main__':
+  args = sys.argv
+
+  if len(args) != 6:
+    print("Correct format is 'python3 folders_sync.py <source_folder_path> <replica_folder_path> <log_file_path> <frequency> <time_unit>")
+    sys.exit(1)
+
+  run(args[1], args[2], args[3], args[4], args[5])
+  
