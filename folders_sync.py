@@ -185,6 +185,7 @@ class FoldersSynchronization:
     self.log_file.write(message)
 
 
+
 def run(source_folder_path: str, replica_folder_path: str, log_file_path: str, frequency: str, time_unit: str):
   if not os.path.isdir(source_folder_path):
     print("Invalid source folder path")
