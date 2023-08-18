@@ -61,6 +61,10 @@ class FoldersSynchronization:
     return tree
   
   def root_walk_through_directory(self, absolute_path: str, relative_path: str = "") -> Tree:
+    if not os.path.isdir(absolute_path):
+      print (f"The directory '{absolute_path}' cannot be found")
+      sys.exit(1)
+      
     tree: Tree = self.walk_through_directory(absolute_path, relative_path)
     tree.name = '__root__'
     tree.calculate_hash()
