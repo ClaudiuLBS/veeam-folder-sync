@@ -1,8 +1,8 @@
 import os
 import unittest
 import shutil
+from create_dummy_data import create_dummy_data
 from folders_sync import FoldersSynchronization
-
 
 class FoldersSyncTest(unittest.TestCase):
   def setUp(self) -> None:
@@ -10,30 +10,10 @@ class FoldersSyncTest(unittest.TestCase):
     self.replica_folder_path = 'replica_folder'
     self.log_file_path = 'log_file'
 
-    os.makedirs(self.source_folder_path)
+    create_dummy_data(self.source_folder_path)
     os.makedirs(self.replica_folder_path)
     open('log_file', 'x').close()
     
-    os.makedirs(os.path.join(self.source_folder_path, 'dir01'))
-    os.makedirs(os.path.join(self.source_folder_path, 'dir02'))
-    os.makedirs(os.path.join(self.source_folder_path, 'dir03'))
-
-    os.makedirs(os.path.join(self.source_folder_path, 'dir01', 'dir11'))
-    os.makedirs(os.path.join(self.source_folder_path, 'dir01', 'dir12'))
-    os.makedirs(os.path.join(self.source_folder_path, 'dir02', 'dir13'))
-    os.makedirs(os.path.join(self.source_folder_path, 'dir02', 'dir14'))
-
-    open(os.path.join(self.source_folder_path, 'file01'), 'x').close()
-    open(os.path.join(self.source_folder_path, 'file02'), 'x').close()
-
-    open(os.path.join(self.source_folder_path, 'dir01', 'file11'), 'x').close()
-    open(os.path.join(self.source_folder_path, 'dir01', 'file12'), 'x').close()
-    open(os.path.join(self.source_folder_path, 'dir01', 'file13'), 'x').close()
-
-    open(os.path.join(self.source_folder_path, 'dir01', 'dir12', 'file21'), 'x').close()
-    open(os.path.join(self.source_folder_path, 'dir01', 'dir12', 'file22'), 'x').close()
-    open(os.path.join(self.source_folder_path, 'dir02', 'dir13', 'file22'), 'x').close()
-
     self.syncFolders = FoldersSynchronization(self.source_folder_path, self.replica_folder_path, self.log_file_path)
 
 
@@ -45,14 +25,14 @@ class FoldersSyncTest(unittest.TestCase):
 
   def test_before_and_after_sync(self):
     # test if the folders are different
-    source_tree = self.syncFolders.walk_through_directory(self.source_folder_path)
-    replica_tree = self.syncFolders.walk_through_directory(self.replica_folder_path)
+    source_tree = self.syncFolders.root_walk_through_directory(self.source_folder_path)
+    replica_tree = self.syncFolders.root_walk_through_directory(self.replica_folder_path)
     self.assertNotEqual(source_tree.hash, replica_tree.hash)
 
     # test if the folders are the same after the sync
     self.syncFolders.sync()
-    source_tree = self.syncFolders.walk_through_directory(self.source_folder_path)
-    replica_tree = self.syncFolders.walk_through_directory(self.replica_folder_path)
+    source_tree = self.syncFolders.root_walk_through_directory(self.source_folder_path)
+    replica_tree = self.syncFolders.root_walk_through_directory(self.replica_folder_path)
     self.assertEqual(source_tree.hash, replica_tree.hash)
   
 
@@ -128,6 +108,26 @@ class FoldersSyncTest(unittest.TestCase):
     os.rmdir(os.path.join(self.source_folder_path, 'dir02', 'dir14'))
 
     print("\n\nTEST DELETE EMPTY FOLDERS")
+    self.test_before_and_after_sync()
+
+
+  def test_rename_folders(self):
+    self.syncFolders.sync()
+    os.rename(os.path.join(self.source_folder_path, 'dir01', 'dir12'), os.path.join(self.source_folder_path, 'dir01', 'dir12_renamed'))
+    os.rename(os.path.join(self.source_folder_path, 'dir02'), os.path.join(self.source_folder_path, 'dir02_renamed'))
+
+    print("\n\nTEST RENAME FOLDERS")
+    self.test_before_and_after_sync()
+
+
+  def test_rename_files(self):
+    self.syncFolders.sync()
+
+    os.rename(os.path.join(self.source_folder_path, 'file01'), os.path.join(self.source_folder_path, 'file01_renamed'))
+    os.rename(os.path.join(self.source_folder_path, 'dir01', 'file12'), os.path.join(self.source_folder_path, 'dir01', 'file12_renamed'))
+    os.rename(os.path.join(self.source_folder_path, 'dir01', 'dir12', 'file22'), os.path.join(self.source_folder_path, 'dir01', 'dir12', 'file22_renamed'))
+
+    print("\n\nTEST RENAME FILES")
     self.test_before_and_after_sync()
 
 

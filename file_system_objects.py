@@ -19,7 +19,9 @@ class FileSystemObject:
     return self.__str__()
 
   def calculate_hash(self, content: str = None) -> None:
-    self.hash = hashlib.md5(content).hexdigest()
+    content_hash = hashlib.md5(content).hexdigest()
+    name_hash = hashlib.md5(self.name.encode()).hexdigest()
+    self.hash = hashlib.md5((content_hash + name_hash).encode()).hexdigest()
 
 
 class Blob(FileSystemObject):
@@ -36,4 +38,6 @@ class Tree(FileSystemObject):
 
   def calculate_hash(self, content: str = None) -> None:
     content_hashes = ''.join([x.hash for x in self.objects])
-    self.hash = hashlib.md5(content_hashes.encode()).hexdigest()
+    content_hash = hashlib.md5(content_hashes.encode()).hexdigest()
+    name_hash = hashlib.md5(self.name.encode()).hexdigest()
+    self.hash = hashlib.md5((content_hash + name_hash).encode()).hexdigest()

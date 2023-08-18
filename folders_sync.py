@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime
 from file_system_objects import FileSystemObject, Blob, Tree
 
+
 class FoldersSynchronization:
   def __init__(self, source_folder_path: str,  replica_folder_path: str, log_file_path: str) -> None:
     self.source_folder_path = source_folder_path
@@ -59,16 +60,17 @@ class FoldersSynchronization:
     tree.relative_path = relative_path
     return tree
   
+  def root_walk_through_directory(self, absolute_path: str, relative_path: str = "") -> Tree:
+    tree: Tree = self.walk_through_directory(absolute_path, relative_path)
+    tree.name = '__root__'
+    tree.calculate_hash()
+    return tree
 
   def check_diff(self):
     # Both source and replica tree should have the same name and hash
-    source_tree: Tree = self.walk_through_directory(self.source_folder_path)
-    source_tree.hash = '__root__'
-    source_tree.name = '__root__'
+    source_tree: Tree = self.root_walk_through_directory(self.source_folder_path)
 
-    replica_tree: Tree = self.walk_through_directory(self.replica_folder_path)
-    replica_tree.hash = '__root__'
-    replica_tree.hash = '__root__'
+    replica_tree: Tree = self.root_walk_through_directory(self.replica_folder_path)
 
     # list of objects to be deleted from replica folder
     deleted: list[FileSystemObject] = []
